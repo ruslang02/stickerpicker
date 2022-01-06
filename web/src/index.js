@@ -102,6 +102,11 @@ class App extends Component {
 	}
 
 	searchStickers(e) {
+        if (e.code === "Escape") {
+            window.parent.document.querySelector("#stickersButton").click();
+            setTimeout(() => window.parent.document.querySelector(".mx_BasicMessageComposer_input").focus(), 10);
+            return;
+        }
 		const sanitizeString = s => s.toLowerCase().trim()
 		const searchTerm = sanitizeString(e.target.value)
 
@@ -121,6 +126,8 @@ class App extends Component {
 				packs: packsWithFilteredStickers.filter(({ stickers }) => !!stickers.length),
 			},
 		})
+        
+        document.querySelector(".pack-list").scrollY = 0;
 	}
 
 	setStickersPerRow(val) {
@@ -259,6 +266,7 @@ class App extends Component {
 		frequent.add(id)
 		this.updateFrequentlyUsed()
 		widgetAPI.sendSticker(sticker)
+        document.querySelector("input").value = "";
 	}
 
 	navScroll(evt) {
@@ -282,17 +290,17 @@ class App extends Component {
 		}
 
 		return html`<main class="has-content ${theme}">
-			<nav onWheel=${this.navScroll} ref=${elem => this.navRef = elem}>
-				<${NavBarItem} pack=${this.state.frequentlyUsed} iconOverride="recent" />
-				${this.state.packs.map(pack => html`<${NavBarItem} id=${pack.id} pack=${pack}/>`)}
-				<${NavBarItem} pack=${{ id: "settings", title: "Settings" }} iconOverride="settings" />
-			</nav>
 			<${SearchBox} onKeyUp=${this.searchStickers} />
 			<div class="pack-list ${isMobileSafari ? "ios-safari-hack" : ""}" ref=${elem => this.packListRef = elem}>
 				${filterActive && packs.length === 0 ? html`<div class="search-empty"><h1>No stickers match your search</h1></div>` : null}
 				${packs.map(pack => html`<${Pack} id=${pack.id} pack=${pack} send=${this.sendSticker} />`)}
 				<${Settings} app=${this}/>
 			</div>
+			<nav onWheel=${this.navScroll} ref=${elem => this.navRef = elem}>
+				<${NavBarItem} pack=${this.state.frequentlyUsed} iconOverride="recent" />
+				${this.state.packs.map(pack => html`<${NavBarItem} id=${pack.id} pack=${pack}/>`)}
+				<${NavBarItem} pack=${{ id: "settings", title: "Settings" }} iconOverride="settings" />
+			</nav>
 		</main>`
 	}
 }
@@ -355,9 +363,36 @@ const Pack = ({ pack, send }) => html`
 `
 
 const Sticker = ({ content, send }) => html`
-	<div class="sticker" onClick=${send} data-sticker-id=${content.id}>
+	<div class="sticker" onClick=${send} onKeyDown=${(e) => e.code === "Enter" && send(e)} data-sticker-id=${content.id} tabindex="0" title=${content.body}>
 		<img data-src=${makeThumbnailURL(content.url)} alt=${content.body} title=${content.body} />
 	</div>
 `
 
 render(html`<${App} />`, document.body)
+
+window.parent.document.querySelector("#stickersButton").addEventListener("click", () => {
+    console.log("yes");
+    setTimeout(() => {
+        window.focus();
+        document.querySelector("input").focus();
+    }, 10);
+});
+
+window.parent.document.querySelector("#stickersButton").addEventListener("keydown", (e) => {
+    if (e.code !== "Enter" && e.code !== "Space") return;
+    setTimeout(() => {
+        window.focus();
+        document.querySelector("input").focus();
+    }, 10);
+});
+
+window.parent.document.querySelector("#mx_persistedElement_stickerPicker .mx_AppTileMenuBarTitle").innerText = "Stickers";
+window.parent.document.querySelector("#mx_persistedElement_stickerPicker .mx_AppTileMenuBarTitle").setAttribute("style", `
+    font-weight: 600;
+    margin-left: 1rem;
+`);
+window.parent.addEventListener("keypress", (e) => {
+    if (e.ctrlKey && e.code === "KeyE") {
+        window.parent.document.querySelector("#stickersButton").click();
+    }
+});

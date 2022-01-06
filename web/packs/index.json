@@ -16,7 +16,12 @@
     "Vaporeon.json",
     "mintvk.json",
     "oneshotniko2.json",
-    "BugCat1.json"
+    "BugCat1.json",
+    "BugCat2.json",
+    "ruzik_cringefest.json",
+    "glacemotes.json",
+    "rin.json",
+    "theplace.json"
   ],
   "homeserver_url": "https://matrix.ruzik.xyz"
 }
